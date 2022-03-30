@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: idempotency-apigw
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      description: Create new order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequest"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+      x-amazon-apigateway-integration:
+          responses:
+            default:
+              statusCode: "201"
+          uri:
+            Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OrderFunction.Arn}/invocations
+          passthroughBehavior: "when_no_match"
+          httpMethod: "POST"
+          contentHandling: "CONVERT_TO_TEXT"
+          type: "aws_proxy"
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      properties:
+        requestToken:
+          type: string
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+          minItems: 1
+        comment:
+          type: string
+      required:
+        - userId
+        - items
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        quantity:
+          type: integer
+          minimum: 1
+      required:
+        - productId
+        - price
+        - quantity
+    SuccessfulResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+x-amazon-apigateway-request-validator: all
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+x-amazon-apigateway-gateway-responses:
+  BAD_REQUEST_BODY:
+    statusCode: 400
+    responseTemplates:
+      application/json: '{"error":"$context.error.validationErrorString"}'
