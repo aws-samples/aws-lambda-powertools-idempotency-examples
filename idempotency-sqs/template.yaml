@@ -29,7 +29,7 @@ Resources:
   PaymentQueue:
     Type: AWS::SQS::Queue
     Properties:
-      SqsManagedSseEnabled: true
+      KmsMasterKeyId: alias/aws/sqs
       VisibilityTimeout: 180
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PaymentDeadLetterQueue.Arn
@@ -38,7 +38,7 @@ Resources:
   PaymentDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      SqsManagedSseEnabled: true
+      KmsMasterKeyId: alias/aws/sqs
 
   PaymentFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
